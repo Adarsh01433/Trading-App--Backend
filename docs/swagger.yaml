@@ -1,0 +1,1530 @@
+openapi: 3.0.0
+info:
+  title: TradeVault API
+  description: |
+    A comprehensive trading platform API that provides:
+    
+    ## Features
+    - **User Authentication**: Secure login/register with JWT tokens
+    - **OTP Verification**: Email-based OTP system for account security
+    - **Real-time Trading**: WebSocket-based live stock updates
+    - **Stock Management**: Buy/sell stocks with portfolio tracking
+    - **Biometric Authentication**: Advanced security with biometric keys
+    - **OAuth Integration**: Google and Apple sign-in support
+    
+    ## Authentication
+    - **App Token**: Used for main application endpoints (JWT_SECRET)
+    - **Socket Token**: Used for WebSocket connections (SOCKET_TOKEN_SECRET)
+    
+    ## Rate Limiting
+    - OTP requests: 1 per minute per email
+    - Login attempts: 3 attempts before 30-minute lockout
+    - PIN attempts: 3 attempts before 30-minute lockout
+    
+  version: '1.0.0'
+  contact:
+    name: TradeVault Support
+    email: support@tradevault.com
+    url: https://tradevault.com/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.tradevault.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+  - SocketAuth: []
+
+paths:
+  # ========================================
+  # AUTHENTICATION ENDPOINTS (Non-Protected)
+  # ========================================
+  
+  /auth/check-email:
+    post:
+      tags:
+        - Authentication
+      summary: Check if email exists and send OTP
+      description: |
+        Checks if an email exists in the system. If not, sends an OTP for registration.
+        If exists, returns user status.
+      operationId: checkEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckEmailRequest'
+            example:
+              email: "user@example.com"
+      responses:
+        '200':
+          description: Email check completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckEmailResponse'
+              example:
+                isExist: false
+        '400':
+          description: Bad request - missing email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Registers a new user with email and password.
+        Requires a valid registration token from OTP verification.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: "user@example.com"
+              password: "SecurePass123!"
+              register_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Bad request - invalid data or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: |
+        Authenticates user with email and password.
+        Returns access and refresh tokens for authenticated requests.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "user@example.com"
+              password: "SecurePass123!"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials or account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/oauth:
+    post:
+      tags:
+        - Authentication
+      summary: OAuth authentication
+      description: |
+        Authenticates user using OAuth providers (Google, Apple).
+        Returns access and refresh tokens.
+      operationId: oauthLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuthRequest'
+            example:
+              provider: "google"
+              id_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: OAuth authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Bad request - invalid provider or token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid OAuth token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/send-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Send OTP to email
+      description: |
+        Sends an OTP to the specified email for various purposes:
+        - email verification
+        - phone number verification
+        - password reset
+        - PIN reset
+      operationId: sendOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendOtpRequest'
+            example:
+              email: "user@example.com"
+              otp_type: "email"
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendOtpResponse'
+        '400':
+          description: Bad request - invalid email or OTP type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify OTP
+      description: |
+        Verifies the OTP sent to email for various operations.
+        Returns appropriate tokens or confirmation based on OTP type.
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+            example:
+              email: "user@example.com"
+              otp: "123456"
+              otp_type: "email"
+              data: null
+      responses:
+        '200':
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyOtpResponse'
+        '400':
+          description: Bad request - invalid OTP or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: |
+        Refreshes the access token using a valid refresh token.
+        Supports both app and socket token refresh.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            example:
+              type: "app"
+              refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Bad request - invalid refresh type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ========================================
+  # USER MANAGEMENT ENDPOINTS (Protected)
+  # ========================================
+  
+  /auth/profile:
+    get:
+      tags:
+        - User Management
+      summary: Get user profile
+      description: Retrieves the authenticated user's profile information
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - User Management
+      summary: Update user profile
+      description: Updates the authenticated user's profile information
+      operationId: updateProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            example:
+              name: "John Doe"
+              gender: "male"
+              date_of_birth: "1990-01-01"
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateProfileResponse'
+        '400':
+          description: Bad request - invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/set-pin:
+    post:
+      tags:
+        - User Management
+      summary: Set login PIN
+      description: Sets a 4-digit login PIN for the authenticated user
+      operationId: setLoginPin
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPinRequest'
+            example:
+              login_pin: "1234"
+      responses:
+        '200':
+          description: PIN set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetPinResponse'
+        '400':
+          description: Bad request - PIN already exists or invalid format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-pin:
+    post:
+      tags:
+        - User Management
+      summary: Verify login PIN
+      description: Verifies the user's login PIN and returns socket tokens
+      operationId: verifyPin
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPinRequest'
+            example:
+              login_pin: "1234"
+      responses:
+        '200':
+          description: PIN verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyPinResponse'
+        '400':
+          description: Bad request - PIN not set or invalid format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid PIN or account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/upload-biometric:
+    post:
+      tags:
+        - User Management
+      summary: Upload biometric key
+      description: Uploads a biometric public key for enhanced security
+      operationId: uploadBiometric
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadBiometricRequest'
+            example:
+              public_key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA..."
+      responses:
+        '200':
+          description: Biometric key uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadBiometricResponse'
+        '400':
+          description: Bad request - missing public key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-biometric:
+    post:
+      tags:
+        - User Management
+      summary: Verify biometric signature
+      description: Verifies biometric signature and returns socket tokens
+      operationId: verifyBiometric
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyBiometricRequest'
+            example:
+              signature: "base64_encoded_signature_here"
+      responses:
+        '200':
+          description: Biometric verification successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyBiometricResponse'
+        '400':
+          description: Bad request - missing signature or no biometric key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - User Management
+      summary: User logout
+      description: Logs out the user and clears biometric keys
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ========================================
+  # STOCK MANAGEMENT ENDPOINTS (Protected)
+  # ========================================
+  
+  /stocks:
+    get:
+      tags:
+        - Stock Management
+      summary: Get all stocks
+      description: Retrieves a list of all available stocks
+      operationId: getAllStocks
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Stocks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetStocksResponse'
+        '401':
+          description: Unauthorized - invalid socket token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stocks/stock:
+    get:
+      tags:
+        - Stock Management
+      summary: Get stock by symbol
+      description: Retrieves detailed information about a specific stock
+      operationId: getStockBySymbol
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: stock
+          in: query
+          description: Stock symbol (e.g., AAPL, GOOGL)
+          required: true
+          schema:
+            type: string
+          example: "AAPL"
+      responses:
+        '200':
+          description: Stock retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetStockResponse'
+        '400':
+          description: Bad request - missing stock symbol
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Stock not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stocks/register:
+    post:
+      tags:
+        - Stock Management
+      summary: Register new stock
+      description: Adds a new stock to the trading platform
+      operationId: registerStock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterStockRequest'
+            example:
+              symbol: "TSLA"
+              companyName: "Tesla, Inc."
+              iconUrl: "https://example.com/tesla-icon.png"
+              lastDayTradedPrice: "250.00"
+              currentPrice: 255.50
+      responses:
+        '201':
+          description: Stock registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterStockResponse'
+        '400':
+          description: Bad request - invalid data or stock already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ========================================
+  # TRADING ENDPOINTS (Protected)
+  # ========================================
+  
+  /stocks/buy:
+    post:
+      tags:
+        - Trading
+      summary: Buy stock
+      description: Purchases a specified quantity of a stock
+      operationId: buyStock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuyStockRequest'
+            example:
+              stock_id: "507f1f77bcf86cd799439011"
+              quantity: 10
+      responses:
+        '201':
+          description: Stock purchased successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuyStockResponse'
+        '400':
+          description: Bad request - insufficient balance or invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stocks/sell:
+    post:
+      tags:
+        - Trading
+      summary: Sell stock
+      description: Sells a specified quantity of a stock from holdings
+      operationId: sellStock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellStockRequest'
+            example:
+              holdingId: "507f1f77bcf86cd799439012"
+              quantity: 5
+      responses:
+        '200':
+          description: Stock sold successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellStockResponse'
+        '400':
+          description: Bad request - insufficient quantity or invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stocks/holding:
+    get:
+      tags:
+        - Trading
+      summary: Get user holdings
+      description: Retrieves all stock holdings for the authenticated user
+      operationId: getAllHoldings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Holdings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetHoldingsResponse'
+        '401':
+          description: Unauthorized - invalid socket token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stocks/order:
+    get:
+      tags:
+        - Trading
+      summary: Get user orders
+      description: Retrieves all trading orders for the authenticated user
+      operationId: getOrder
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOrdersResponse'
+        '401':
+          description: Unauthorized - invalid socket token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token for application authentication.
+        Include in Authorization header: `Bearer <token>`
+    SocketAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token for WebSocket and trading operations.
+        Include in Authorization header: `Bearer <token>`
+
+  schemas:
+    # ========================================
+    # AUTHENTICATION SCHEMAS
+    # ========================================
+    
+    CheckEmailRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+
+    CheckEmailResponse:
+      type: object
+      properties:
+        isExist:
+          type: boolean
+          description: Whether the email already exists in the system
+          example: false
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - register_token
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          description: User's password (minimum 8 characters)
+          example: "SecurePass123!"
+        register_token:
+          type: string
+          description: Registration token received from OTP verification
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RegisterResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            userId:
+              type: string
+              description: Unique user identifier
+              example: "507f1f77bcf86cd799439011"
+            email:
+              type: string
+              format: email
+              description: User's email address
+              example: "user@example.com"
+        tokens:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: JWT access token for API authentication
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            refresh_token:
+              type: string
+              description: JWT refresh token for getting new access tokens
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          description: User's password
+          example: "SecurePass123!"
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            name:
+              type: string
+              description: User's display name
+              example: "John Doe"
+            userId:
+              type: string
+              description: Unique user identifier
+              example: "507f1f77bcf86cd799439011"
+            email:
+              type: string
+              format: email
+              description: User's email address
+              example: "user@example.com"
+            phone_exist:
+              type: boolean
+              description: Whether user has set a phone number
+              example: false
+            login_pin_exist:
+              type: boolean
+              description: Whether user has set a login PIN
+              example: false
+        tokens:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: JWT access token for API authentication
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            refresh_token:
+              type: string
+              description: JWT refresh token for getting new access tokens
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    OAuthRequest:
+      type: object
+      required:
+        - provider
+        - id_token
+      properties:
+        provider:
+          type: string
+          enum: [google, apple]
+          description: OAuth provider
+          example: "google"
+        id_token:
+          type: string
+          description: ID token from OAuth provider
+          example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    SendOtpRequest:
+      type: object
+      required:
+        - email
+        - otp_type
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        otp_type:
+          type: string
+          enum: [phone, email, reset_password, reset_pin]
+          description: Purpose of the OTP
+          example: "email"
+
+    SendOtpResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "OTP Sent to registered email address"
+
+    VerifyOtpRequest:
+      type: object
+      required:
+        - email
+        - otp
+        - otp_type
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        otp:
+          type: string
+          description: 6-digit OTP code
+          example: "123456"
+        otp_type:
+          type: string
+          enum: [phone, email, reset_password, reset_pin]
+          description: Purpose of the OTP
+          example: "email"
+        data:
+          type: string
+          nullable: true
+          description: Additional data (e.g., phone number, new password, new PIN)
+          example: "+1234567890"
+
+    VerifyOtpResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "OTP Verified and operation completed successfully"
+        register_token:
+          type: string
+          nullable: true
+          description: Registration token (only for email verification)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - type
+        - refresh_token
+      properties:
+        type:
+          type: string
+          enum: [socket, app]
+          description: Type of token to refresh
+          example: "app"
+        refresh_token:
+          type: string
+          description: Valid refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: New JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          description: New JWT refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    # ========================================
+    # USER MANAGEMENT SCHEMAS
+    # ========================================
+    
+    ProfileResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique user identifier
+          example: "507f1f77bcf86cd799439011"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        phone_exist:
+          type: boolean
+          description: Whether user has set a phone number
+          example: false
+        name:
+          type: string
+          description: User's display name
+          example: "John Doe"
+        login_pin_exist:
+          type: boolean
+          description: Whether user has set a login PIN
+          example: false
+        balance:
+          type: string
+          description: User's account balance (formatted to 2 decimal places)
+          example: "50000.00"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: User's display name
+          example: "John Doe"
+        gender:
+          type: string
+          enum: [male, female, other]
+          description: User's gender
+          example: "male"
+        date_of_birth:
+          type: string
+          format: date
+          description: User's date of birth
+          example: "1990-01-01"
+
+    UpdateProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+          example: true
+        data:
+          $ref: '#/components/schemas/User'
+
+    SetPinRequest:
+      type: object
+      required:
+        - login_pin
+      properties:
+        login_pin:
+          type: string
+          pattern: '^[0-9]{4}$'
+          description: 4-digit login PIN
+          example: "1234"
+
+    SetPinResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+          example: true
+        socket_tokens:
+          type: object
+          properties:
+            socket_access_token:
+              type: string
+              description: JWT token for WebSocket authentication
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            socket_refresh_token:
+              type: string
+              description: JWT refresh token for WebSocket
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    VerifyPinRequest:
+      type: object
+      required:
+        - login_pin
+      properties:
+        login_pin:
+          type: string
+          pattern: '^[0-9]{4}$'
+          description: 4-digit login PIN
+          example: "1234"
+
+    VerifyPinResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+          example: true
+        socket_tokens:
+          type: object
+          properties:
+            socket_access_token:
+              type: string
+              description: JWT token for WebSocket authentication
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            socket_refresh_token:
+              type: string
+              description: JWT refresh token for WebSocket
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    UploadBiometricRequest:
+      type: object
+      required:
+        - public_key
+      properties:
+        public_key:
+          type: string
+          description: Base64 encoded RSA public key
+          example: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA..."
+
+    UploadBiometricResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Key Uploaded Successfully"
+
+    VerifyBiometricRequest:
+      type: object
+      required:
+        - signature
+      properties:
+        signature:
+          type: string
+          description: Base64 encoded biometric signature
+          example: "base64_encoded_signature_here"
+
+    VerifyBiometricResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+          example: true
+        socket_tokens:
+          type: object
+          properties:
+            socket_access_token:
+              type: string
+              description: JWT token for WebSocket authentication
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            socket_refresh_token:
+              type: string
+              description: JWT refresh token for WebSocket
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "User logged out successfully"
+
+    # ========================================
+    # STOCK MANAGEMENT SCHEMAS
+    # ========================================
+    
+    RegisterStockRequest:
+      type: object
+      required:
+        - symbol
+        - companyName
+        - iconUrl
+        - lastDayTradedPrice
+        - currentPrice
+      properties:
+        symbol:
+          type: string
+          description: Stock symbol/ticker
+          example: "TSLA"
+        companyName:
+          type: string
+          description: Company name
+          example: "Tesla, Inc."
+        iconUrl:
+          type: string
+          format: uri
+          description: URL to company icon
+          example: "https://example.com/tesla-icon.png"
+        lastDayTradedPrice:
+          type: string
+          description: Previous day's closing price
+          example: "250.00"
+        currentPrice:
+          type: number
+          description: Current stock price
+          example: 255.50
+
+    RegisterStockResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Stock added successfully!"
+        data:
+          $ref: '#/components/schemas/Stock'
+
+    GetStocksResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Stocks retrieved successfully!"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stock'
+
+    GetStockResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Stock retrieved successfully!"
+        data:
+          $ref: '#/components/schemas/Stock'
+
+    # ========================================
+    # TRADING SCHEMAS
+    # ========================================
+    
+    BuyStockRequest:
+      type: object
+      required:
+        - stock_id
+        - quantity
+      properties:
+        stock_id:
+          type: string
+          description: Stock identifier
+          example: "507f1f77bcf86cd799439011"
+        quantity:
+          type: integer
+          minimum: 1
+          description: Number of shares to buy
+          example: 10
+
+    BuyStockResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Stock bought successfully!"
+        data:
+          $ref: '#/components/schemas/Holding'
+
+    SellStockRequest:
+      type: object
+      required:
+        - holdingId
+        - quantity
+      properties:
+        holdingId:
+          type: string
+          description: Holding identifier
+          example: "507f1f77bcf86cd799439012"
+        quantity:
+          type: integer
+          minimum: 1
+          description: Number of shares to sell
+          example: 5
+
+    SellStockResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Stock sold successfully!"
+        data:
+          type: object
+          properties:
+            orderId:
+              type: string
+              description: Order identifier
+              example: "507f1f77bcf86cd799439013"
+            sellPrice:
+              type: number
+              description: Total sale amount
+              example: 1277.50
+
+    GetHoldingsResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Holdings retrieved successfully!"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Holding'
+
+    GetOrdersResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Success message
+          example: "Orders retrieved successfully!"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+
+    # ========================================
+    # DATA MODELS
+    # ========================================
+    
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique user identifier
+          example: "507f1f77bcf86cd799439011"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        name:
+          type: string
+          description: User's display name
+          example: "John Doe"
+        phone_number:
+          type: string
+          nullable: true
+          description: User's phone number
+          example: "+1234567890"
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          description: User's date of birth
+          example: "1990-01-01"
+        gender:
+          type: string
+          enum: [male, female, other]
+          nullable: true
+          description: User's gender
+          example: "male"
+        balance:
+          type: number
+          description: User's account balance
+          example: 50000.00
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-01T00:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-01T00:00:00.000Z"
+
+    Stock:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique stock identifier
+          example: "507f1f77bcf86cd799439011"
+        symbol:
+          type: string
+          description: Stock symbol/ticker
+          example: "TSLA"
+        companyName:
+          type: string
+          description: Company name
+          example: "Tesla, Inc."
+        iconUrl:
+          type: string
+          format: uri
+          description: URL to company icon
+          example: "https://example.com/tesla-icon.png"
+        lastDayTradedPrice:
+          type: string
+          description: Previous day's closing price
+          example: "250.00"
+        currentPrice:
+          type: number
+          description: Current stock price
+          example: 255.50
+        dayTimeSeries:
+          type: array
+          description: Intraday price data
+          items:
+            type: object
+        tenMinTimeSeries:
+          type: array
+          description: 10-minute interval price data
+          items:
+            type: object
+
+    Holding:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique holding identifier
+          example: "507f1f77bcf86cd799439011"
+        user:
+          type: string
+          description: User identifier
+          example: "507f1f77bcf86cd799439012"
+        stock:
+          type: string
+          description: Stock identifier
+          example: "507f1f77bcf86cd799439013"
+        quantity:
+          type: integer
+          description: Number of shares held
+          example: 10
+        buyPrice:
+          type: number
+          description: Purchase price per share
+          example: 250.00
+        createdAt:
+          type: string
+          format: date-time
+          description: Holding creation timestamp
+          example: "2024-01-01T00:00:00.000Z"
+
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique order identifier
+          example: "507f1f77bcf86cd799439011"
+        user:
+          type: string
+          description: User identifier
+          example: "507f1f77bcf86cd799439012"
+        stock:
+          type: string
+          description: Stock identifier
+          example: "507f1f77bcf86cd799439013"
+        quantity:
+          type: integer
+          description: Number of shares traded
+          example: 10
+        price:
+          type: number
+          description: Price per share
+          example: 250.00
+        type:
+          type: string
+          enum: [buy, sell]
+          description: Order type
+          example: "buy"
+        timestamp:
+          type: string
+          format: date-time
+          description: Order timestamp
+          example: "2024-01-01T00:00:00.000Z"
+        remainingBalance:
+          type: number
+          description: User's balance after order
+          example: 47500.00
+
+    # ========================================
+    # ERROR RESPONSES
+    # ========================================
+    
+    ErrorResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          description: Error message
+          example: "Invalid request data"
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: User Management
+    description: User profile and account management
+  - name: Stock Management
+    description: Stock information and registration
+  - name: Trading
+    description: Buy/sell stocks and portfolio management

@@ -1,0 +1,137 @@
+[
+  {
+    "symbol": "AAPL",
+    "companyName": "Apple Inc.",
+    "iconUrl": "https://logo.clearbit.com/apple.com",
+    "lastDayTradedPrice": "175.43",
+    "currentPrice": 175.43,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "MSFT",
+    "companyName": "Microsoft Corporation",
+    "iconUrl": "https://logo.clearbit.com/microsoft.com",
+    "lastDayTradedPrice": "338.11",
+    "currentPrice": 338.11,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "GOOGL",
+    "companyName": "Alphabet Inc. (Google)",
+    "iconUrl": "https://logo.clearbit.com/google.com",
+    "lastDayTradedPrice": "142.56",
+    "currentPrice": 142.56,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "AMZN",
+    "companyName": "Amazon.com Inc.",
+    "iconUrl": "https://logo.clearbit.com/amazon.com",
+    "lastDayTradedPrice": "145.24",
+    "currentPrice": 145.24,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "TSLA",
+    "companyName": "Tesla Inc.",
+    "iconUrl": "https://logo.clearbit.com/tesla.com",
+    "lastDayTradedPrice": "248.50",
+    "currentPrice": 248.50,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "META",
+    "companyName": "Meta Platforms Inc.",
+    "iconUrl": "https://logo.clearbit.com/meta.com",
+    "lastDayTradedPrice": "334.87",
+    "currentPrice": 334.87,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "NVDA",
+    "companyName": "NVIDIA Corporation",
+    "iconUrl": "https://logo.clearbit.com/nvidia.com",
+    "lastDayTradedPrice": "485.09",
+    "currentPrice": 485.09,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "NFLX",
+    "companyName": "Netflix Inc.",
+    "iconUrl": "https://logo.clearbit.com/netflix.com",
+    "lastDayTradedPrice": "492.19",
+    "currentPrice": 492.19,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "JPM",
+    "companyName": "JPMorgan Chase & Co.",
+    "iconUrl": "https://logo.clearbit.com/jpmorganchase.com",
+    "lastDayTradedPrice": "172.28",
+    "currentPrice": 172.28,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "JNJ",
+    "companyName": "Johnson & Johnson",
+    "iconUrl": "https://logo.clearbit.com/jnj.com",
+    "lastDayTradedPrice": "162.45",
+    "currentPrice": 162.45,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "V",
+    "companyName": "Visa Inc.",
+    "iconUrl": "https://logo.clearbit.com/visa.com",
+    "lastDayTradedPrice": "264.85",
+    "currentPrice": 264.85,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "WMT",
+    "companyName": "Walmart Inc.",
+    "iconUrl": "https://logo.clearbit.com/walmart.com",
+    "lastDayTradedPrice": "67.56",
+    "currentPrice": 67.56,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "PG",
+    "companyName": "Procter & Gamble Co.",
+    "iconUrl": "https://logo.clearbit.com/pg.com",
+    "lastDayTradedPrice": "156.78",
+    "currentPrice": 156.78,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "HD",
+    "companyName": "The Home Depot Inc.",
+    "iconUrl": "https://logo.clearbit.com/homedepot.com",
+    "lastDayTradedPrice": "342.56",
+    "currentPrice": 342.56,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  },
+  {
+    "symbol": "DIS",
+    "companyName": "The Walt Disney Company",
+    "iconUrl": "https://logo.clearbit.com/disney.com",
+    "lastDayTradedPrice": "89.07",
+    "currentPrice": 89.07,
+    "dayTimeSeries": [],
+    "tenMinTimeSeries": []
+  }
+]
