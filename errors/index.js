@@ -5,4 +5,4 @@ import NotFoundError from "./not-found.js";
 import BadRequestError from "./bad-request.js";
 
 
-export {CustomAPIError, UnautheticatedError, NotFoundError, BadRequestError}
+export  {CustomAPIError, UnautheticatedError, NotFoundError, BadRequestError}
