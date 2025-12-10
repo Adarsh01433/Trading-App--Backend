@@ -97,36 +97,3 @@ const login = async (req, res)=> {
  }
 
 
- async function  generateRefreshTokens(
-   token,
-   refresh_secret,
-   refresh_expiry,
-   access_secret,
-   access_expiry
-){
-   try {
-       const payload = jwt.verify(token. refresh_secret);
-       const user = await User.findById(payload.userId);
-       if(!user){
-         throw new NotFoundError("User not found");
-       }
-       const access_token = jwt.sign(
-         {userId : payload.userId},
-         access_secret,
-         {expiresIn : access_expiry}
-       );
-       const newRefreshToken = jwt.sign(
-         {userId :payload.userId},
-         refresh_secret,
-         {expiresIn : refresh_expiry}     
-       )
-       return {access_token, newRefreshToken};
-   } catch (error) {
-      console.error(error);
-      throw new UnautheticatedError("Invalid Token")
-   }
-
- }
-
-
-export {register, login}
