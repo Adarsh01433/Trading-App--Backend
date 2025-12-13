@@ -3,7 +3,7 @@ import {UnautheticatedError} from  "../errors/index.js"
 
 const auth = async(req, res, next)=> {
  const authHeader = req.headers.authorization;
- if(!authHeader || ! authHeader.startWith("Bearer ")){
+ if(!authHeader || ! authHeader.startsWith("Bearer ")){
     throw new UnautheticatedError("Authentication invalid");
  }
 
@@ -18,4 +18,4 @@ const auth = async(req, res, next)=> {
  }
 }
 
-export default auth
+export default auth 
