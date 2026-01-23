@@ -120,7 +120,7 @@ const refreshToken = async(req, res)=> {
      throw new UnautheticatedError("Invalid Token")
    }
 }
-
+ 
  // ------- Helper Function -------
  async function generateRefreshToken(
       token,

@@ -23,7 +23,7 @@ const StockSchema = new mongoose.Schema({
         required : true
     },
 
-    dailyTimeSeries : {
+    dayTimeSeries : {
         type : [Object],
         default : [],
     },
