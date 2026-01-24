@@ -32,7 +32,7 @@ export const mailSender = async(email, otp, otp_type)=> {
      let result = await transporter.sendMail({
             from : process.env.MAIL_FROM,
             to : email,
-            subject : "Trading App -OTP Verifiation",
+            subject : "Trading App - OTP Verifiation",
             html : htmlContent,
         });
         return result;
