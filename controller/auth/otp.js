@@ -3,8 +3,7 @@ import OTP from "../../models/Otp.js";
 import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestError } from "../../errors/index.js";
-import {generateOTP} from '../../services/mailSender.js'
-import { PassThroughClient } from 'google-auth-library';
+import {generateOTP} from '../../services/mailSender.js';
 
 
 
