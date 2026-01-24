@@ -3,8 +3,9 @@ import OTP from "../../models/Otp.js";
 import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestError } from "../../errors/index.js";
-import {} from '../../services/mailSender.js'
+import {generateOTP} from '../../services/mailSender.js'
 import { PassThroughClient } from 'google-auth-library';
+
 
 
 const verifyOtp =  async (req, res)=> {
@@ -12,6 +13,13 @@ const verifyOtp =  async (req, res)=> {
 
       if(!email || !otp || !otp_type){
         throw new BadRequestError("Please provide all values");
+
+  //👉 Agar OTP ka kaam sirf verify email hai
+// → data ki zarurat nahi
+
+// 👉 Agar OTP ka kaam kuch update karna hai
+// (reset pin / password / phone)
+// → data mandatory
 
       }else if( otp_type !== "email" && !data){
          throw new BadRequestError('Please provide all values');
@@ -22,12 +30,12 @@ const verifyOtp =  async (req, res)=> {
       if(!otpRecord){
         throw new BadRequestError("Invalid OTP or OTP expired");
       }
-
+      // otp → user ne jo OTP dala
       const isVerified = await otpRecord.compareOTP(otp);
       if(!isVerified){
         throw new BadRequestError('Invalid OTP or OTP expired');
       }
-
+       // reuse allowed ❌
       await OTP.findByIdAndDelete(otpRecord.id);
 
     switch (otp_type){
@@ -53,6 +61,46 @@ const verifyOtp =  async (req, res)=> {
                 throw new BadRequestError("Invalid OTP request type")
     }
 
-           const user = await User.findOne({email})
+           const user = await User.findOne({email});
+           
+           // EMAIL OTP SPECIAL CASE (SIGNUP FLOW)
+           if(otp_type === "email" && !user){
+                const register_token = jwt.sign({email}, process.env.REGISTER_SECRET, {
+                  expiresIn : process.env.REGISTER_SECRET_EXPIRY,
+                });
+                return res.status(StatusCodes.OK)
+                .json({msg : "OTP verified sucessfully", register_token});
+           }
+           res.status(StatusCodes.OK).json({msg : "OTP verified sucessfully"})
 
 } 
+
+const sendOtp =async(req,res)=> {
+
+ const {email, otp_type} = req.body;
+ 
+if(!email || !otp_type){
+  throw new BadRequestError("Please provide all values")
+}
+const user = await User.findOne({email});
+ 
+if(!user && otp_type == 'phone'){
+  throw new BadRequestError("User not found");
+}
+
+if(otp_type === "email" && user){
+  throw new BadRequestError("User already exist")
+}
+if(otp_type === "phone" && user.phone_number){
+  throw new BadRequestError("Phone number already exists")
+}
+
+const otp = await generateOTP();
+const otpPayload = {email, otp, otp_type};
+await OTP.create(otpPayload);
+
+res.status(StatusCodes.OK).json({msg : "OTP sent sucessfully"})
+
+ };
+
+ export {verifyOtp, sendOtp}
