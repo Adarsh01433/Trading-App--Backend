@@ -38,7 +38,7 @@ otpSchema.methods.compareOtp = async function (enteredOtp){
 
 async function sendVerificationMail(email, otp, otp_type) {
   try {
-    const mailResponse = await mailSender(email, otp ,otp_type);
+     await mailSender(email, otp ,otp_type);
   } catch (error) {
     console.log(error)
     throw error;
