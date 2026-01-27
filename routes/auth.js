@@ -4,6 +4,7 @@ import authenticateUser from "../middleware/authentication.js"
 import { checkEmail } from "../controller/auth/email.js"
 import { signInwithOauth } from "../controller/auth/oauth.js"
 import { sendOtp, verifyOtp } from "../controller/auth/otp.js"
+import { getProfile, updateProfile } from "../controller/auth/user.js";
 
 
 const router = express.Router();
@@ -16,6 +17,10 @@ router.post("/check-email", checkEmail);
 router.post("oauth", signInwithOauth);
 router.post("/verify-otp", verifyOtp);
 router.post("/send-otp",sendOtp);
+
+router.route("/profile")
+.get(authenticateUser, getProfile)
+.get(authenticateUser, updateProfile);
 
 
 
