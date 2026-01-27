@@ -4,7 +4,8 @@ import authenticateUser from "../middleware/authentication.js"
 import { checkEmail } from "../controller/auth/email.js"
 import { signInwithOauth } from "../controller/auth/oauth.js"
 import { sendOtp, verifyOtp } from "../controller/auth/otp.js"
-import { getProfile, setLoginPinFirst, updateProfile } from "../controller/auth/user.js";
+import { getProfile, setLoginPinFirst, updateProfile, verifyPin } from "../controller/auth/user.js";
+import { uploadBiometric, verifyBiometric } from "../controller/auth/biometrics.js"
 
 
 const router = express.Router();
@@ -24,6 +25,11 @@ router.route("/profile")
 
 
 router.post("/set-pin", authenticateUser, setLoginPinFirst);
+router.post("/verify-pin", authenticateUser, verifyPin);
+router.post("/upload-biometric", authenticateUser,uploadBiometric )
+router.post("/verify-biometric", authenticateUser, verifyBiometric);
+router.post("/refresh-token", refreshToken);
+router.post("/logout", authenticateUser, logout);
 
 
 
