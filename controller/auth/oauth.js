@@ -66,12 +66,12 @@ async function getKey(kid){
 
     const accessToken = user.createAccessToken();
     const refreshToken = user.createRefreshToken();
-    
+
   // flags bcz oauth can not complte profile
     let phone_exist = false;
     let login_pin_exist = false;
 
-    if (user.phone) phone_exist = true;
+    if (user.phone_number) phone_exist = true;
      if(user.login_pin) login_pin_exist = true;
      res.status(StatusCodes.OK).json ({
         user : {
@@ -89,3 +89,5 @@ async function getKey(kid){
    }
 
  }
+
+ export {signInwithOauth};
