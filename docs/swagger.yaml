@@ -357,6 +357,7 @@ paths:
               name: "John Doe"
               gender: "male"
               date_of_birth: "1990-01-01"
+              phone_number: "1234567890"
       responses:
         '200':
           description: Profile updated successfully

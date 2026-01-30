@@ -11,7 +11,7 @@ const checkEmail = async(req, res)=> {
         throw new BadRequestError("Email is required")
     }
     let isExist = true;
-    let user = await User.find({email});
+    let user = await User.findOne({email});
 
     if(!user){
         const otp = await generateOTP();

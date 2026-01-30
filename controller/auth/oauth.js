@@ -7,7 +7,7 @@ import { StatusCodes } from "http-status-codes";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const JwksClientInstance = JwksClient({
+const JwksClientInstance = new JwksClient({
     jwksUri : "http://appleid.apple.com/auth/keys",
     timeout : 30000, // 30 sec
 });

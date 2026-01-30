@@ -23,7 +23,7 @@ const updateProfile = async(req, res)=> {
     const updatedUser = await User.findByIdAndUpdate(
         userId ,
         updatedFields,
-        {new : true , runValidators : true, select : '-passowrd -biometricKey'}
+        {new : true , runValidators : true, select : '-passowrd -biometricKey -login_pin'}
     )
     if(!updatedUser){
         throw new NotFoundError(`NO user with id : ${userId}`)

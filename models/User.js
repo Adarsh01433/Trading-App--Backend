@@ -28,8 +28,6 @@ const UserSchema = new mongoose.Schema(
     },
     login_pin: {
       type: String,
-      maxlength: 4,
-      minlength: 4,
     },
     phone_number: {
       type: String,

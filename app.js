@@ -6,8 +6,8 @@ import swaggerUI from 'swagger-ui-express';
 import YAML from 'yamljs';
 import notFoundMiddleware from "./middleware/not-found.js";
 import errorHandlerMiddleware from './middleware/error-handling.js';
-import cors from 'cors';
-import connectDB  from './db/connect.js';
+import cors from 'cors'; 
+import connectDB  from './config/connect.js';
 import authRouter from './routes/auth.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -24,7 +24,7 @@ app.use(express.json());
 const httpServer = createServer(app);
 
 app.get("/",(req, res)=> {
-    res.send(`<h1> Trading API</h1><a href = "/apu-docs">Documentation </a>`);
+    res.send(`<h1> Trading API</h1><a href = "/api-docs">Documentation </a>`);
 });
 
 // Swagger API DOCs
