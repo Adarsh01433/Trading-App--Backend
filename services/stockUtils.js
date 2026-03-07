@@ -1,3 +1,4 @@
+
 import { NotFoundError } from "../errors/index.js";
 import Stock from "../models/Stock.js";
 
@@ -73,10 +74,70 @@ const generateSocketData = async(symbol)=> {
  const lastItem = stock.dayTimeSeries[stock.dayTimeSeries.length -1];
 
  if(!lastItem || now-new Date(lastItem.timeStamp) > 1*60*1000){
-    stock.dayTimeSeries.push({timeStamp, time, open : currentPrice, high, low, close});
-    if(stock.dayTimeSeries.length > 78){
-        stock.dayTimeSeries.shift();
-    }
+    stock.dayTimeSeries.push({timeStamp,
+         time, 
+         _internal_originalTime : time,
+         open :roundToTwoDecimals(currentPrice), high, low, close});
+ }else {
+    const updateHigh = Math.max(lastItem.high, close+ Math.random() * 1);
+    const updateLow = Math.min(lastItem.low, close - Math.random() * 1);
+
+    const updateCandle = {
+        high : roundToTwoDecimals(updateHigh),
+        low : roundToTwoDecimals(updateLow),
+        close : roundToTwoDecimals(close),
+        open : lastItem.open,
+        timeStamp: lastItem.timeStamp,
+        time : lastItem.time,
+        _internal_originalTime: lastItem._internal_originaltime,
+    };
+
+    stock.dayTimeSeries[stock.dayTimeSeries.length -1]= updateCandle;
+ }
+
+ stock.dayTimeSeries = stock.dayTimeSeries.slice(-90);
+
+ stock.currentPrice = close;
+
+ try {
+    await stock.save();
+ } catch (error) {
+    console.log("Skipping Conflicts");
+    
  }
 
 }
+
+
+const store10Min = async()=> {
+    const stock = await Stock.findOne({symbol});
+    if(!stock){
+        throw new NotFoundError("Stock not found");
+    }
+    const now = new Date();
+    const currentPrice = stock.currentPrice;
+    const latestItem = stock.dayTimeSeries[stock.dayTimeSeries.length -1];
+
+    const timestamp = now .toISOString();
+    
+    const time = now.getTime()/1000; 
+
+    stock.tenMinTimeSeries.push({
+        timestamp,
+        time,
+        _internal_originalTime: time,
+        open : roundToTwoDecimals(currentPrice),
+        close : roundToTwoDecimals(latestItem.high),
+        low : roundToTwoDecimals(latestItem.low),
+        close : roundToTwoDecimals(latestItem.close),
+    })
+    try {
+        await stock.save()
+    } catch (error) {
+        console.log("Skipping Conflitcs");
+        
+    }
+
+};
+
+export {generateSocketData, store10Min}
