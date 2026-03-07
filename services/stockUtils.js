@@ -1,0 +1,82 @@
+import { NotFoundError } from "../errors/index.js";
+import Stock from "../models/Stock.js";
+
+
+const roundToTwoDecimals = ()=> {
+    return Math.round((num + Number.EPSILON) * 100)/100;
+}
+
+const generateSocketData = async(symbol)=> {
+ const stock = await Stock.findOne({symbol});
+ if(!stock){
+    throw new NotFoundError(`Stock with symbol ${symbol} not found`);
+ }
+
+ const now = new Date();
+ const minchange =-0.02;
+ const maxChange = 0.02;
+ const trendChange = 0.005;
+ const currentPrice = stock.currentPrice;
+
+ const trendType = Math.random();
+ let trendModifier = 0;
+
+ if(trendType < 0.33){
+    // Sideways trend : np additional change
+    trendModifier =0;
+ } else if (trendType < 0.66){
+    // Uptrend: positive bias
+    trendModifier = trendChange;
+ }else {
+    // DownTrend: negative bias
+    trendModifier = -trendChange
+ }
+ const changePercentage = 
+ Math.random() * (maxChange - minchange) + minchange + trendModifier
+
+ const close = roundToTwoDecimals(currentPrice * (1+changePercentage));
+
+ const patternType = Math.random();
+
+ let high, low;
+
+ if(patternType < 0.15){
+    //Marubozu Pattern
+    high = Math.max(currentPrice , close)
+    low = Math.min(currentPrice , close)-Math.random() * 2;
+ } else if (patternType < 0.3){
+    high = Math.max(currentPrice, close);
+    low = Math.min(currentPrice, close);
+
+ } else if(patternType < 0.45){
+    // Inverted Hammer pattern
+    high = Math.max(currentPrice, close) + Math.random() *2;
+    low = Math.min(currentPrice, close);
+ }else if (patternType < 0.6){
+    // shotting Star pattern
+    high = Math.max(currentPrice, close) + Math.random() * 2;
+    low =Math.min(currentPrice, close);
+ } else {
+    if(Math.random() < 0.5){
+        high = close + Math.random() * 4;
+        low = close - Math.random() * 2;
+    } else {
+        high = close + Math.random() * 2;
+        low = close -Math.random() * 4 ;
+    }
+ }
+ high = roundToTwoDecimals(high);
+ low = roundToTwoDecimals(low);
+
+ const timeStamp = now.toISOString();
+ const time = now.getTime() / 1000;
+ const lastItem = stock.dayTimeSeries[stock.dayTimeSeries.length -1];
+
+ if(!lastItem || now-new Date(lastItem.timeStamp) > 1*60*1000){
+    stock.dayTimeSeries.push({timeStamp, time, open : currentPrice, high, low, close});
+    if(stock.dayTimeSeries.length > 78){
+        stock.dayTimeSeries.shift();
+    }
+ }
+
+}

@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema(
         "Please provide a 10-digit number without spaces or special character",
       ],
       unique: true,
-      spares: true,
+      sparse: true,
     },
 
     date_of_birth: Date,
@@ -81,7 +81,7 @@ UserSchema.pre("save", async function () {
 });
 
 UserSchema.pre("save", async function () {
-  if (this.isModified) {
+  if (this.isModified("login_pin")) {
     const salt = await bcrypt.genSalt(10);
     this.login_pin = await bcrypt.hash(this.login_pin, salt);
   }
@@ -89,7 +89,7 @@ UserSchema.pre("save", async function () {
 
 // reset pin
 
-UserSchema.static.updatePIN = async function (email, newPIN) {
+UserSchema.statics.updatePIN = async function (email, newPIN) {
   try {
     const user = await this.findOne({ email });
 
@@ -118,7 +118,7 @@ UserSchema.static.updatePIN = async function (email, newPIN) {
 
 // reset password
 
-UserSchema.static.updatePassword = async function (email, newPassword) {
+UserSchema.statics.updatePassword = async function (email, newPassword) {
   try {
     const user = await this.findOne({ email }); // find user
     if (!user) {

@@ -9,8 +9,10 @@ import errorHandlerMiddleware from './middleware/error-handling.js';
 import cors from 'cors'; 
 import connectDB  from './config/connect.js';
 import authRouter from './routes/auth.js';
+import stockRouter from "./routes/stocks.js"
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import authenticateSocketUser from "./middleware/socketAuth.js"
 
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = dirname(_filename);
@@ -35,6 +37,7 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 // ROutes
 
 app.use('/auth', authRouter);
+app.use("/stocks", authenticateSocketUser, stockRouter)
 
 // MIDDLEWARE
 app.use(cors());

@@ -32,7 +32,7 @@ const OrderSchema = new mongoose.Schema({
         type : Number,
         required : true,
         set : function(value){
-            return this.parseFloat(value.toFixed(2));
+            return parseFloat(value.toFixed(2));
         }
     }
 });

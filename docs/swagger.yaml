@@ -660,7 +660,7 @@ paths:
       description: Purchases a specified quantity of a stock
       operationId: buyStock
       security:
-        - BearerAuth: []
+        - SocketAuth: []
       requestBody:
         required: true
         content:
@@ -692,7 +692,7 @@ paths:
       description: Sells a specified quantity of a stock from holdings
       operationId: sellStock
       security:
-        - BearerAuth: []
+        - SocketAuth: []
       requestBody:
         required: true
         content:
@@ -724,7 +724,7 @@ paths:
       description: Retrieves all stock holdings for the authenticated user
       operationId: getAllHoldings
       security:
-        - BearerAuth: []
+        - SocketAuth: []
       responses:
         '200':
           description: Holdings retrieved successfully
@@ -747,7 +747,7 @@ paths:
       description: Retrieves all trading orders for the authenticated user
       operationId: getOrder
       security:
-        - BearerAuth: []
+        - SocketAuth: []
       responses:
         '200':
           description: Orders retrieved successfully

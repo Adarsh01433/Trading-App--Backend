@@ -44,7 +44,7 @@ const buyStock = async(req,res)=> {
             quantity,
             price : buyPrice,
             type : "buy",
-            remaingBalance : currentUser.balance,
+            remainingBalance : currentUser.balance,
          });
 
          await newOrder.save();
@@ -100,7 +100,7 @@ const sellStock = async(req, res)=> {
         quantity,
         price : stock.currentPrice,
         type : "sell",
-        remaingBalance : currentUser.balance,
+        remainingBalance : currentUser.balance,
      });
 
      await newOrder.save();
